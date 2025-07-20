@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureCrypt</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #e0f2fe;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        nav {
+            background: #1e3a8a;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            width: 100%;
+        }
+        .nav-brand {
+            margin: 0;
+        }
+        .nav-brand a {
+            color: #facc15;
+            text-decoration: none;
+            font-size: 2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        .nav-brand i { margin-right: 10px; }
+        .nav-right {
+            display: flex;
+            align-items: center;
+            margin-left: 0; /* Removed 1px right shift, forced left */
+            justify-content: flex-end; /* Ensures right alignment but balanced */
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 15px;
+            font-size: 1.2rem;
+        }
+        .login-btn {
+            font-size: 1.2rem;
+            color: white;
+            background-color: #6b21a8;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px; /* Adjusted spacing for balance */
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+        .login-btn:hover {
+            background-color: #5b1a98;
+        }
+        .login-btn i {
+            margin-right: 5px;
+        }
+        .menu-toggle {
+            font-size: 1.5rem;
+            color: white;
+            cursor: pointer;
+            margin-left: 10px; /* Adjusted for balance */
+            display: none;
+        }
+        .section {
+            padding: 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 20px auto;
+            background: white;
+        }
+        h2, h3 { color: #1e3a8a; text-align: center; font-size: 2rem; }
+        select, input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #6b21a8;
+            font-size: 1.2rem;
+            box-sizing: border-box;
+        }
+        button {
+            background: #1e3a8a;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        button.processing { background: #6b21a8; cursor: not-allowed; }
+        #progress {
+            width: 0%;
+            height: 5px;
+            background: #facc15;
+            margin-top: 10px;
+        }
+        #status { text-align: center; margin-top: 10px; font-size: 1.2rem; color: #ef4444; }
+        .section i { color: #6b21a8; margin-right: 10px; }
+        footer {
+            background: #1e3a8a;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: auto;
+            width: 100%;
+        }
+        footer a { color: #facc15; text-decoration: none; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+        }
+        .modal-tabs { display: flex; justify-content: space-around; margin-bottom: 15px; }
+        .modal-tabs button {
+            background: none;
+            border: none;
+            color: #333;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        .modal-tabs button.active {
+            color: #6b21a8;
+        }
+        .modal-form { display: none; }
+        .modal-form.active { display: block; }
+        #history {
+            margin-top: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f0f0f0;
+        }
+        #history p { margin: 5px 0; font-size: 1rem; }
+        @media (max-width: 1024px) {
+            .section { max-width: 900px; padding: 15px; }
+            h2, h3 { font-size: 1.8rem; }
+            select, input, button { font-size: 1.1rem; padding: 10px; }
+            .nav-brand a { font-size: 1.8rem; }
+            .nav-links a { font-size: 1.1rem; }
+            .login-btn { font-size: 1.1rem; padding: 7px 13px; }
+        }
+        @media (max-width: 768px) {
+            .section { max-width: 600px; padding: 10px; }
+            h2, h3 { font-size: 1.6rem; }
+            select, input, button { font-size: 1rem; padding: 8px; }
+            .nav-brand a { font-size: 1.6rem; }
+            .nav-links a { font-size: 1rem; }
+            .login-btn { font-size: 1rem; padding: 6px 12px; }
+        }
+        @media (max-width: 600px) {
+            nav { justify-content: space-between; padding: 10px; }
+            .nav-links { display: none; }
+            .menu-toggle { display: block; }
+            .nav-right.active .nav-links {
+                display: flex;
+                position: absolute;
+                top: 50px;
+                right: 10px;
+                background: #1e3a8a;
+                padding: 10px;
+                flex-direction: column;
+                width: 150px;
+            }
+            .nav-links a { margin: 5px 0; font-size: 1rem; }
+            .nav-brand a { font-size: 1.5rem; }
+            .login-btn { font-size: 1rem; padding: 6px 12px; }
+            .section { margin: 10px; padding: 10px; max-width: 100%; }
+            h2, h3 { font-size: 1.4rem; }
+            select, input, button { font-size: 0.9rem; padding: 6px; }
+            #progress { height: 3px; }
+            .modal-content { width: 85%; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-brand">
+            <a href="#tool" onclick="scrollToSection('tool')"><i class="fas fa-shield-alt"></i> SecureCrypt</a>
+        </div>
+        <div class="nav-right" id="navRight">
+            <div class="nav-links" id="navLinks">
+                <a href="#features" onclick="scrollToSection('features')">Features</a>
+                <a href="#about" onclick="scrollToSection('about')">About</a>
+            </div>
+            <button class="login-btn" id="loginBtn">
+                <i class="fas fa-user"></i> Login
+            </button>
+            <div class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+    <div class="section" id="tool">
+        <h2>SecureCrypt</h2>
+        <select id="action">
+            <option value="encrypt">Encrypt</option>
+            <option value="decrypt">Decrypt</option>
+        </select>
+        <input type="file" id="fileInput">
+        <input type="password" id="passwordInput" placeholder="Enter Password">
+        <button id="processBtn" onclick="processFile()">Process</button>
+        <button id="resetBtn" onclick="resetForm()">Reset</button>
+        <button id="clearHistoryBtn" onclick="clearHistory()" style="display: none;">Clear History</button>
+        <div id="progress"></div>
+        <div id="status"></div>
+        <p style="font-size: 0.9rem; color: #ef4444;">Note: Max file size 20MB</p>
+        <div id="history" style="display: none;"></div>
+    </div>
+    <div class="section" id="features">
+        <h3><i class="fas fa-shield-alt"></i> Features</h3>
+        <p><i class="fas fa-lock"></i> <strong>Encryption:</strong> Uses AES-256 to secure files with a password.</p>
+        <p><i class="fas fa-unlock"></i> <strong>Decryption:</strong> Decrypts .enc files with the correct password.</p>
+        <p><i class="fas fa-trash"></i> <strong>Clear History:</strong> Logged-in users can clear their history.</p>
+    </div>
+    <div class="section" id="about">
+        <h3><i class="fas fa-info-circle"></i> About SecureCrypt</h3>
+        <p>SecureCrypt encrypts and decrypts files using AES-256, a secure algorithm. It works in-browser to keep data private.</p>
+    </div>
+    <footer>
+        <p>© 2025 SecureCrypt </p>
+    </footer>
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-tabs">
+                <button class="active" onclick="showTab('login')">Login</button>
+                <button onclick="showTab('signup')">Signup</button>
+            </div>
+            <div class="modal-form active" id="loginForm">
+                <input type="text" id="loginUsername" placeholder="Username" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <button onclick="login()">Login</button>
+                <p id="loginStatus"></p>
+            </div>
+            <div class="modal-form" id="signupForm">
+                <input type="text" id="signupUsername" placeholder="Username" required>
+                <input type="password" id="signupPassword" placeholder="Password" required>
+                <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+                <button onclick="signup()">Signup</button>
+                <p id="signupStatus"></p>
+            </div>
+        </div>
+    </div>
+    <script>
+        let selectedFile, fileType, currentUser = null;
+        const status = document.getElementById("status");
+        const processBtn = document.getElementById("processBtn");
+        const progressBar = document.getElementById("progress");
+        const navLinks = document.getElementById("navLinks");
+        const menuToggle = document.getElementById("menuToggle");
+        const loginBtn = document.getElementById("loginBtn");
+        const loginModal = document.getElementById("loginModal");
+        const historyDiv = document.getElementById("history");
+        const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+        const navRight = document.getElementById("navRight");
+
+        let users = {}; // No longer used for auth, just for history
+        let history = JSON.parse(localStorage.getItem("history")) || [];
+
+        document.getElementById("fileInput").addEventListener("change", function(event) {
+            selectedFile = event.target.files[0];
+            fileType = selectedFile ? selectedFile.type : "";
+            if (selectedFile && selectedFile.size > 20 * 1024 * 1024) {
+                status.textContent = "Error: File size exceeds 20MB";
+                status.style.color = "#ef4444";
+                selectedFile = null;
+            } else {
+                status.textContent = selectedFile ? `Selected: ${selectedFile.name}` : "";
+            }
+        });
+
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: "smooth" });
+            if (window.innerWidth <= 600) navRight.classList.remove("active");
+        }
+
+        menuToggle.addEventListener("click", () => navRight.classList.toggle("active"));
+
+        loginBtn.addEventListener("click", () => {
+            if (currentUser) logout();
+            else loginModal.style.display = "flex";
+        });
+
+        window.addEventListener("click", (e) => {
+            if (e.target === loginModal) loginModal.style.display = "none";
+        });
+
+        function showTab(tab) {
+            document.querySelectorAll(".modal-form").forEach(form => form.classList.remove("active"));
+            document.querySelectorAll(".modal-tabs button").forEach(btn => btn.classList.remove("active"));
+            document.getElementById(tab + "Form").classList.add("active");
+            document.querySelector(`.modal-tabs button[onclick="showTab('${tab}')"]`).classList.add("active");
+        }
+
+        function login() {
+            const username = document.getElementById("loginUsername").value;
+            const password = document.getElementById("loginPassword").value;
+            fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username, password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    currentUser = username;
+                    loginModal.style.display = "none";
+                    document.getElementById("loginStatus").textContent = "Logged in!";
+                    document.getElementById("loginStatus").style.color = "#22c55e";
+                    loginBtn.textContent = 'Logout';
+                    clearHistoryBtn.style.display = "block";
+                    updateHistory();
+                } else {
+                    document.getElementById("loginStatus").textContent = data.message;
+                    document.getElementById("loginStatus").style.color = "#ef4444";
+                }
+            })
+            .catch(error => {
+                document.getElementById("loginStatus").textContent = "Error: Login failed";
+                document.getElementById("loginStatus").style.color = "#ef4444";
+            });
+        }
+
+        function logout() {
+            currentUser = null;
+            loginBtn.textContent = 'Login';
+            clearHistoryBtn.style.display = "none";
+            historyDiv.style.display = "none";
+            updateHistory();
+        }
+
+        function signup() {
+            const username = document.getElementById("signupUsername").value;
+            const password = document.getElementById("signupPassword").value;
+            const confirmPassword = document.getElementById("confirmPassword").value;
+            if (password !== confirmPassword) {
+                document.getElementById("signupStatus").textContent = "Passwords mismatch";
+                document.getElementById("signupStatus").style.color = "#ef4444";
+                return;
+            }
+            fetch('/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username, password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("signupStatus").textContent = data.message;
+                document.getElementById("signupStatus").style.color = data.status === "success" ? "#22c55e" : "#ef4444";
+                if (data.status === "success") showTab("login");
+            })
+            .catch(error => {
+                document.getElementById("signupStatus").textContent = "Error: Signup failed";
+                document.getElementById("signupStatus").style.color = "#ef4444";
+            });
+        }
+
+        function processFile() {
+            if (!selectedFile) {
+                status.textContent = "Error: Select a file";
+                status.style.color = "#ef4444";
+                return;
+            }
+            const password = document.getElementById("passwordInput").value;
+            if (!password) {
+                status.textContent = "Error: Enter password";
+                status.style.color = "#ef4444";
+                return;
+            }
+            processBtn.classList.add("processing");
+            processBtn.disabled = true;
+            progressBar.style.width = "100%";
+            const action = document.getElementById("action").value;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (action === "encrypt") {
+                    const data = e.target.result.split(",")[1];
+                    const encrypted = CryptoJS.AES.encrypt(data, password).toString();
+                    const blob = new Blob([encrypted], { type: "text/plain" });
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = selectedFile.name + ".enc";
+                    link.click();
+                    status.textContent = "Success: Encrypted!";
+                    status.style.color = "#22c55e";
+                    if (currentUser) {
+                        history.push({ user: currentUser, file: selectedFile.name, action: "encrypt", time: new Date().toLocaleString() });
+                        localStorage.setItem("history", JSON.stringify(history));
+                        updateHistory();
+                    }
+                } else {
+                    const data = e.target.result;
+                    try {
+                        const decrypted = CryptoJS.AES.decrypt(data, password);
+                        const decryptedData = decrypted.toString(CryptoJS.enc.Utf8);
+                        if (!decryptedData) {
+                            status.textContent = "Error: Wrong password";
+                            status.style.color = "#ef4444";
+                            progressBar.style.width = "0%";
+                            processBtn.classList.remove("processing");
+                            processBtn.disabled = false;
+                            return;
+                        }
+                        const binaryData = atob(decryptedData);
+                        const bytes = new Uint8Array(binaryData.length);
+                        for (let i = 0; i < binaryData.length; i++) bytes[i] = binaryData.charCodeAt(i);
+                        const blob = new Blob([bytes], { type: fileType });
+                        const link = document.createElement("a");
+                        link.href = URL.createObjectURL(blob);
+                        link.download = selectedFile.name.replace(".enc", "");
+                        link.click();
+                        status.textContent = "Success: Decrypted!";
+                        status.style.color = "#22c55e";
+                        if (currentUser) {
+                            history.push({ user: currentUser, file: selectedFile.name.replace(".enc", ""), action: "decrypt", time: new Date().toLocaleString() });
+                            localStorage.setItem("history", JSON.stringify(history));
+                            updateHistory();
+                        }
+                    } catch (e) {
+                        status.textContent = "Error: Wrong password or file";
+                        status.style.color = "#ef4444";
+                    }
+                }
+                progressBar.style.width = "0%";
+                processBtn.classList.remove("processing");
+                processBtn.disabled = false;
+            };
+            if (action === "encrypt") reader.readAsDataURL(selectedFile);
+            else reader.readAsText(selectedFile);
+        }
+
+        function resetForm() {
+            document.getElementById("fileInput").value = "";
+            document.getElementById("passwordInput").value = "";
+            selectedFile = null;
+            fileType = "";
+            status.textContent = "";
+            if (currentUser) updateHistory();
+        }
+
+        function clearHistory() {
+            history = history.filter(h => h.user !== currentUser);
+            localStorage.setItem("history", JSON.stringify(history));
+            updateHistory();
+        }
+
+        function updateHistory() {
+            if (currentUser) {
+                historyDiv.style.display = "block";
+                const userHistory = history.filter(h => h.user === currentUser);
+                historyDiv.innerHTML = userHistory.length ? userHistory.map(h => `<p>${h.file} - ${h.action} - ${h.time}</p>`).join("") : "<p>No history</p>";
+                clearHistoryBtn.style.display = "block";
+            } else {
+                historyDiv.style.display = "none";
+                clearHistoryBtn.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
